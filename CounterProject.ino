@@ -1,8 +1,12 @@
+#include <SD.h>
+#include <SPI.h>
 #include <Wire.h>
 #include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
 
 RTC_DS3231 rtc;
+
+const int chipSelect = 53;
 
 int Button_1 = 2;
 int Button_2 = 3;
@@ -21,9 +25,11 @@ volatile int counter = 0;
 volatile int counter_1 = 0;
 volatile int counter_2 = 0;
 volatile int counter_3 = 0;
+
 volatile int counter_4 = 0;
 volatile int counter_5 = 0;
 volatile int counter_6 = 0;
+
 volatile int counter_7 = 0;
 volatile int counter_8 = 0;
 volatile int counter_9 = 0;
@@ -35,9 +41,11 @@ volatile int Total_3 = 0;
 volatile int Total_a = 0;
 volatile int Total_b = 0;
 volatile int Total_c = 0;
+
 volatile int Total_d = 0;
 volatile int Total_e = 0;
 volatile int Total_f = 0;
+
 volatile int Total_g = 0;
 volatile int Total_h = 0;
 volatile int Total_i = 0;
@@ -93,17 +101,33 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(ENC_A), read_encoder, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENC_B), read_encoder, CHANGE);
 
-  attachInterrupt(digitalPinToInterrupt(Button_1), buttonInterrupt1, FALLING);
-  attachInterrupt(digitalPinToInterrupt(Button_2), buttonInterrupt2, FALLING);
-  attachInterrupt(digitalPinToInterrupt(Button_3), buttonInterrupt3, FALLING);
+  attachInterrupt(digitalPinToInterrupt(Button_1), buttonInterrupt1_Service_1, FALLING);
+  attachInterrupt(digitalPinToInterrupt(Button_2), buttonInterrupt2_Service_1, FALLING);
+  attachInterrupt(digitalPinToInterrupt(Button_3), buttonInterrupt3_Service_1, FALLING);
+
+  attachInterrupt(digitalPinToInterrupt(Button_1), buttonInterrupt4_Service_2, FALLING);
+  attachInterrupt(digitalPinToInterrupt(Button_2), buttonInterrupt5_Service_2, FALLING);
+  attachInterrupt(digitalPinToInterrupt(Button_3), buttonInterrupt6_Service_2, FALLING);
+  
+  attachInterrupt(digitalPinToInterrupt(Button_1), buttonInterrupt7_Service_3, FALLING);
+  attachInterrupt(digitalPinToInterrupt(Button_2), buttonInterrupt8_Service_3, FALLING);
+  attachInterrupt(digitalPinToInterrupt(Button_3), buttonInterrupt9_Service_3, FALLING);
+
   attachInterrupt(digitalPinToInterrupt(Button_4), buttonInterrupt4_Service1, FALLING);
   attachInterrupt(digitalPinToInterrupt(Button_4), buttonInterrupt4_Service2, FALLING);
   attachInterrupt(digitalPinToInterrupt(Button_4), buttonInterrupt4_Service3, FALLING);
-  
+
   // Check if the RTC is connected
   if (!rtc.begin()) {
     Serial.println("Couldn't find RTC");
-    while (1);
+    while (1)
+      ;
+  }
+  // Initialize SD card
+  if (!SD.begin(chipSelect)) {
+    Serial.println("SD Card initialization failed!");
+    while (1)
+      ;
   }
 
   // Check if the RTC lost power and if so, set the time
@@ -148,15 +172,6 @@ void loop() {
     case SERVICE_3_COUNTER:
       service_3_counter();
       break;
-    case SERVICE_1:
-      
-      break;
-    case SERVICE_2:
-      
-      break;
-    case SERVICE_3:
-      
-      break;
   }
 }
 void idle() {
@@ -186,17 +201,20 @@ void idle() {
       lastCounter = counter;
     }
   }
-  if(counter == 1){
+  if (counter == 1) {
     buttonInterrupt4_Service1();
-  }else if (counter == 2){
+  } else if (counter == 2) {
     buttonInterrupt4_Service2();
-  }else if (counter == 3){
+  } else if (counter == 3) {
     buttonInterrupt4_Service3();
   }
   delay(500);
 }
 void service_1_counter() {
-  buttonInterrupt3();
+  buttonInterrupt1_Service_1();
+  buttonInterrupt2_Service_1();
+  buttonInterrupt3_Service_1();
+
   lcd.clear();
   lcd.noBlink();
   lcd.setCursor(0, 0);
@@ -212,26 +230,32 @@ void service_1_counter() {
 
   lcd.setCursor(0, 1);
   lcd.print("MEN: ");
+  Total_a = counter_1;
   lcd.print(counter_1);
   lcd.setCursor(0, 2);
   lcd.print("WOMEN: ");
+  Total_b = counter_2;
   lcd.print(counter_2);
   lcd.setCursor(0, 3);
   lcd.print("YOUTH: ");
+  Total_c = counter_3;
   lcd.print(counter_3);
   lcd.setCursor(10, 3);
   lcd.print("TOTAL: ");
   Total_1 = Total_a + Total_b + Total_c;
   lcd.print(Total_1);
+  buttonInterrupt4_Service1_Back();
   delay(500);
 }
 void service_2_counter() {
-  buttonInterrupt3();
+  buttonInterrupt4_Service_2();
+  buttonInterrupt5_Service_2();
+  buttonInterrupt6_Service_2();
   lcd.clear();
   lcd.noBlink();
   lcd.setCursor(0, 0);
   lcd.print("SERVICE 2");
-    
+
   DateTime now = rtc.now();
   lcd.setCursor(11, 0);
   lcd.print(now.day(), DEC);
@@ -242,25 +266,32 @@ void service_2_counter() {
 
   lcd.setCursor(0, 1);
   lcd.print("MEN: ");
-  lcd.print(counter_1);
+  Total_d = counter_4;
+  lcd.print(counter_4);
   lcd.setCursor(0, 2);
   lcd.print("WOMEN: ");
-  lcd.print(counter_2);
+  Total_e = counter_5;
+  lcd.print(counter_5);
   lcd.setCursor(0, 3);
   lcd.print("YOUTH: ");
-  lcd.print(counter_3);
+  Total_f = counter_6;
+  lcd.print(counter_6);
   lcd.setCursor(10, 3);
   Total_2 = Total_d + Total_e + Total_f;
   lcd.print("TOTAL: ");
+  lcd.print(Total_2);
+  buttonInterrupt4_Service1_Back();
   delay(500);
 }
 void service_3_counter() {
-  buttonInterrupt3();
+  buttonInterrupt7_Service_3();
+  buttonInterrupt8_Service_3();
+  buttonInterrupt9_Service_3();
   lcd.clear();
   lcd.noBlink();
   lcd.setCursor(0, 0);
   lcd.print("SERVICE 3");
-  
+
   DateTime now = rtc.now();
   lcd.setCursor(11, 0);
   lcd.print(now.day(), DEC);
@@ -268,24 +299,90 @@ void service_3_counter() {
   lcd.print(now.month(), DEC);
   lcd.print('/');
   lcd.print(now.year(), DEC);
-
   lcd.setCursor(0, 1);
   lcd.print("MEN: ");
-  lcd.print(counter_1);
+  Total_g = counter_7;
+  lcd.print(counter_7);
   lcd.setCursor(0, 2);
   lcd.print("WOMEN: ");
-  lcd.print(counter_2);
+  Total_h = counter_8;
+  lcd.print(counter_8);
   lcd.setCursor(0, 3);
   lcd.print("YOUTH: ");
-  lcd.print(counter_3);
+  Total_i = counter_9;
+  lcd.print(counter_9);
   lcd.setCursor(10, 3);
-  Total_3 = counter_1 + counter_2 + counter_3;
-  // Total_3 = Total_g + Total_h + Total_i;
+  Total_3 = Total_g + Total_h + Total_i;
   lcd.print("TOTAL: ");
   lcd.print(Total_3);
+  buttonInterrupt4_Service1_Back();
   delay(500);
 }
-void buttonInterrupt1() {
+void updateSDCardData() {
+  // Open the file in read mode
+  File dataFile = SD.open("data.csv", FILE_READ);
+
+  // If the file is not available, return
+  if (!dataFile) {
+    Serial.println("Error opening data file");
+    return;
+  }
+
+  // Read the existing data
+  String newData = "";
+  while (dataFile.available()) {
+    newData += (char)dataFile.read();
+  }
+
+  // Close the file
+  dataFile.close();
+
+  // Find the position of the last entry for Service_1 and today's date
+  String searchString = getCurrentDate() + ",Service_1";
+  int pos = newData.lastIndexOf(searchString);
+
+  if (pos != -1) {
+    // If the entry is found, update the values
+    newData.remove(pos, newData.length() - pos);  // Remove the existing entry
+
+    // Update the time, Men, Women, Youth, and Total values
+    newData += getCurrentDate() + "," + getCurrentTime() + ",Service_1," + counter_1 + "," + counter_2 + "," + counter_3 + "," + Total_1 + "\n";
+  } else {
+    // If no entry is found, add a new entry
+    newData += getCurrentDate() + "," + getCurrentTime() + ",Service_1," + counter_1 + "," + counter_2 + "," + counter_3 + "," + Total_1 + "\n";
+  }
+
+  // Open the file in write mode to update the data
+  dataFile = SD.open("data.csv", FILE_WRITE);
+  Serial.println("Test Pass");
+
+  // If the file is not available, return
+  if (!dataFile) {
+    Serial.println("Error opening data file for writing");
+    return;
+  }
+
+  // Write the updated data to the file
+  dataFile.print(newData);
+  Serial.println("Data Logged");
+
+  // Close the file
+  dataFile.close();
+}
+
+String getCurrentTime() {
+  DateTime now = rtc.now();
+  String timeStr = String(now.hour()) + ":" + String(now.minute()) + ":" + String(now.second());
+  return timeStr;
+}
+
+String getCurrentDate() {
+  DateTime now = rtc.now();
+  String dateStr = String(now.day()) + "/" + String(now.month()) + "/" + String(now.year());
+  return dateStr;
+  Serial.println(dateStr);
+}
+void buttonInterrupt1_Service_1() {
   if (millis() - lastDebounceTime1 > debounceDelay1) {
     buttonState1 = digitalRead(Button_1);
     if (buttonState1 == LOW && lastButtonState1 == HIGH) {
@@ -296,7 +393,7 @@ void buttonInterrupt1() {
     lastDebounceTime1 = millis();
   }
 }
-void buttonInterrupt2() {
+void buttonInterrupt2_Service_1() {
   if (millis() - lastDebounceTime2 > debounceDelay2) {
     buttonState2 = digitalRead(Button_2);
     if (buttonState2 == LOW && lastButtonState2 == HIGH) {
@@ -307,7 +404,7 @@ void buttonInterrupt2() {
     lastDebounceTime2 = millis();
   }
 }
-void buttonInterrupt3() {
+void buttonInterrupt3_Service_1() {
   if (millis() - lastDebounceTime3 > debounceDelay3) {
     buttonState3 = digitalRead(Button_3);
     if (buttonState3 == LOW && lastButtonState3 == HIGH) {
@@ -318,13 +415,93 @@ void buttonInterrupt3() {
     lastDebounceTime3 = millis();
   }
 }
+void buttonInterrupt4_Service_2() {
+  if (millis() - lastDebounceTime1 > debounceDelay1) {
+    buttonState1 = digitalRead(Button_1);
+    if (buttonState1 == LOW && lastButtonState1 == HIGH) {
+      Serial.println("Button 1 Pressed!");
+      counter_4++;
+    }
+    lastButtonState1 = buttonState1;
+    lastDebounceTime1 = millis();
+  }
+}
+void buttonInterrupt5_Service_2() {
+  if (millis() - lastDebounceTime2 > debounceDelay2) {
+    buttonState2 = digitalRead(Button_2);
+    if (buttonState2 == LOW && lastButtonState2 == HIGH) {
+      Serial.println("Button 2 Pressed!");
+      counter_5++;
+    }
+    lastButtonState2 = buttonState2;
+    lastDebounceTime2 = millis();
+  }
+}
+void buttonInterrupt6_Service_2() {
+  if (millis() - lastDebounceTime3 > debounceDelay3) {
+    buttonState3 = digitalRead(Button_3);
+    if (buttonState3 == LOW && lastButtonState3 == HIGH) {
+      Serial.println("Button 3 Pressed!");
+      counter_6++;
+    }
+    lastButtonState3 = buttonState3;
+    lastDebounceTime3 = millis();
+  }
+}
+void buttonInterrupt7_Service_3() {
+  if (millis() - lastDebounceTime3 > debounceDelay3) {
+    buttonState3 = digitalRead(Button_1);
+    if (buttonState3 == LOW && lastButtonState3 == HIGH) {
+      Serial.println("Button 1 Pressed!");
+      counter_7++;
+    }
+    lastButtonState3 = buttonState3;
+    lastDebounceTime3 = millis();
+  }
+}
+
+void buttonInterrupt8_Service_3() {
+  if (millis() - lastDebounceTime3 > debounceDelay3) {
+    buttonState3 = digitalRead(Button_2);
+    if (buttonState3 == LOW && lastButtonState3 == HIGH) {
+      Serial.println("Button 2 Pressed!");
+      counter_8++;
+    }
+    lastButtonState3 = buttonState3;
+    lastDebounceTime3 = millis();
+  }
+}
+void buttonInterrupt9_Service_3() {
+  if (millis() - lastDebounceTime3 > debounceDelay3) {
+    buttonState3 = digitalRead(Button_3);
+    if (buttonState3 == LOW && lastButtonState3 == HIGH) {
+      Serial.println("Button 3 Pressed!");
+      counter_9++;
+    }
+    lastButtonState3 = buttonState3;
+    lastDebounceTime3 = millis();
+  }
+}
 void buttonInterrupt4_Service1() {
   if (millis() - lastDebounceTime4 > debounceDelay4) {
     buttonState4 = digitalRead(Button_4);
     if (buttonState4 == LOW && lastButtonState4 == HIGH) {
       Serial.println("Service 1 Selected");
-      if(currentState == IDLE){
+      if (currentState == IDLE) {
         currentState = SERVICE_1_COUNTER;
+      }
+    }
+    lastButtonState4 = buttonState4;
+    lastDebounceTime4 = millis();
+  }
+}
+void buttonInterrupt4_Service1_Back() {
+  if (millis() - lastDebounceTime4 > debounceDelay4) {
+    buttonState4 = digitalRead(Button_4);
+    if (buttonState4 == LOW && lastButtonState4 == HIGH) {
+      Serial.println("Select Options");
+      if (currentState == SERVICE_1_COUNTER || currentState == SERVICE_2_COUNTER || currentState == SERVICE_3_COUNTER ) {
+        currentState = IDLE;
       }
     }
     lastButtonState4 = buttonState4;
